@@ -24,12 +24,15 @@ async function returnFetch(entry) {
   }
 }
 
-async function display(temp, aqi, placeQuery) {
+async function display(temp, aqi, place) {
   // function for displaying the results
-  console.log(placeQuery);
-  const entry = `https://pixabay.com/api/?q=${placeQuery}&category=places&key=${keys.pixabay}`;
-  const answer = await returnFetch(entry);
-  console.log(answer);
+  let entry = `https://pixabay.com/api/?q=${place}&orientation=horizontal&min_width=1920&min_height=1080&editors_choice=1&category=places&key=${keys.pixabay}`;
+  let answer = await returnFetch(entry);
+
+  if (answer.hits.length === 0) {
+    entry = `https://pixabay.com/api/?id=3625405&key=${keys.pixabay}`;
+    answer = await returnFetch(entry);
+  }
 
   const BG = answer.hits[0].largeImageURL;
 
@@ -37,48 +40,47 @@ async function display(temp, aqi, placeQuery) {
   console.log(temp, aqi);
 }
 
-function fetchBG(query) {
-}
-
-async function fetchAirQuality(lat = "", long = "") {
+async function fetchAirQuality(location = "") {
   // used to get AQI and Temp from current location or coordinates
-
   let entry;
   // choose api entry point according to parameter values
-  if (lat === undefined || long === undefined) {
+  if (location == undefined) {
     entry = `https://api.airvisual.com/v2/nearest_city?key=${keys.airVisual}`;
   } else {
-    entry = `https://api.airvisual.com/v2/nearest_city?lat=${lat}&lon=${long}&key=${keys.airVisual}`;
+    entry = `https://api.airvisual.com/v2/nearest_city?lat=${location.lat}&lon=${location.lng}&key=${keys.airVisual}`;
   }
   // get answer from fetching entry and return to `display`
   const answer = await returnFetch(entry);
-  console.log(answer);
 
   // return fahrenheit temperature + air quality index
   const temp = celciusToF(answer.data.current.weather.tp);
   const aqi = answer.data.current.pollution.aqius;
-  const placeQuery = `${answer.data.city}`
+  
+  // get location/place name
+  const place = answer.data.state;
+  
   // display the result
-  display(temp, aqi, placeQuery);
+  display(temp, aqi, place);
 }
 
 async function fetchLocation(query) {
   // used to get the coords from a search query (airVisual api doesn't have this feature)
-
   const entry = `https://api.opencagedata.com/geocode/v1/json?q=${query}&key=${keys.openCage}`;
 
   // get coords from openCage and return to `fetchAirQuality`
   const answer = await returnFetch(entry);
+  const target = answer.results[0];
 
-  // return coords of the first result from forward geocoding
-  const geometry = answer.results[0].geometry;
+  // coords of the first result from forward geocoding
+  const lat = target.geometry.lat;
+  const lng = target.geometry.lng;
 
   // pass to `fetchAirQuality`
-  fetchAirQuality(geometry.lat, geometry.lng);
+  fetchAirQuality({ lat, lng });
 }
 
 function init() {
-  fetchLocation("Seattle");
+  // fetchLocation("Illinois");
   // fetchAirQuality();
 }
 init();
