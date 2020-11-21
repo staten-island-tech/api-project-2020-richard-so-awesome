@@ -5,12 +5,11 @@ import "regenerator-runtime/runtime";
 import { keys } from "./keys";
 import { DOMSelectors } from "./DOM";
 
-const celciusToF = (C) => C * (9 / 5) + 32;
+const celciusToF = (C) => Math.round(C * (9 / 5) + 32);
 // simple helper to convert celcius => an obsolete measurement of temperature
 
 async function returnFetch(entry) {
   // universal function to do fetching,
-
   try {
     // fetch the data from api
     const response = await fetch(entry);
@@ -26,18 +25,44 @@ async function returnFetch(entry) {
 
 async function display(temp, aqi, place) {
   // function for displaying the results
-  let entry = `https://pixabay.com/api/?q=${place}&orientation=horizontal&min_width=1920&min_height=1080&editors_choice=1&category=places&key=${keys.pixabay}`;
+  let entry = `https://pixabay.com/api/?q=${place.state}&orientation=horizontal&min_width=1920&min_height=1080&editors_choice=1&category=places&key=${keys.pixabay}`;
+  // fetch custom background
   let answer = await returnFetch(entry);
-
+  // if unpopular place, fetch generic img
   if (answer.hits.length === 0) {
     entry = `https://pixabay.com/api/?id=3625405&key=${keys.pixabay}`;
     answer = await returnFetch(entry);
   }
-
   const BG = answer.hits[0].largeImageURL;
 
-  console.log(BG);
-  console.log(temp, aqi);
+  // change background
+  DOMSelectors.bg.style.backgroundImage = `url('${BG}')`;
+
+  // change place placeholder
+  let cityState;
+  if (place.city === place.state) {
+    cityState = `${place.city}`;
+  } else {
+    cityState = `${place.city}, ${place.state}`;
+  }
+  DOMSelectors.placeCityState.innerHTML = cityState;
+  DOMSelectors.placeCountry.innerHTML = place.country;
+
+  // change aqi color
+  let color;
+  if (aqi <= 50) {
+    color = "green";
+  } else if (aqi <= 100) {
+    color = "yellow";
+  } else if (aqi <= 200) {
+    color = "red";
+  } else {
+    color = "purple";
+  }
+  DOMSelectors.aqi.style.color = color;
+  // change aqi + temp
+  DOMSelectors.aqi.innerHTML = aqi;
+  DOMSelectors.temp.innerHTML = `${temp}°C / ${celciusToF(temp)}°F`;
 }
 
 async function fetchAirQuality(location = "") {
@@ -51,16 +76,19 @@ async function fetchAirQuality(location = "") {
   }
   // get answer from fetching entry and return to `display`
   const answer = await returnFetch(entry);
+  console.log(answer);
 
-  // return fahrenheit temperature + air quality index
-  const temp = celciusToF(answer.data.current.weather.tp);
-  const aqi = answer.data.current.pollution.aqius;
-  
-  // get location/place name
-  const place = answer.data.state;
-  
+  const data = answer.data;
+  // temperature + air quality index
+  const temp = data.current.weather.tp;
+  const aqi = data.current.pollution.aqius;
+
+  // location/place name
+  const state = data.state;
+  const city = data.city;
+  const country = data.country;
   // display the result
-  display(temp, aqi, place);
+  display(temp, aqi, { city, state, country });
 }
 
 async function fetchLocation(query) {
@@ -70,6 +98,7 @@ async function fetchLocation(query) {
   // get coords from openCage and return to `fetchAirQuality`
   const answer = await returnFetch(entry);
   const target = answer.results[0];
+  console.log(answer);
 
   // coords of the first result from forward geocoding
   const lat = target.geometry.lat;
@@ -80,7 +109,13 @@ async function fetchLocation(query) {
 }
 
 function init() {
-  // fetchLocation("Illinois");
-  // fetchAirQuality();
+  fetchAirQuality();
+
+  DOMSelectors.userBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    const query = DOMSelectors.userSearch.value;
+    DOMSelectors.userSearch.value = "";
+    fetchLocation(query);
+  });
 }
 init();

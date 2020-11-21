@@ -1,4 +1,73 @@
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&display=swap');
+@import "button";
+
+html,
 body {
-  margin: 0;
+  font-size: 62.5%;
+  font-family: 'Nunito', sans-serif;
   padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+  background: rgb(80, 80, 80);
+  height: 100vh;
+}
+
+.bg-container {
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center;
+  filter: blur(.25vw) brightness(.5);
+  position: absolute;
+  height: 100%;
+  width: 100%;
+}
+
+.main-container {
+  position: relative;
+  padding: 3vw;
+  height: auto;
+  color: white;
+  filter: drop-shadow(.25vw .25vw .1vw black);
+  .top-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    .title {
+      font-size: 2.5vw;
+      font-weight: bold;
+    }
+  }
+
+  .mid-container {
+    margin: 5vw auto 2.5vw auto;
+    width: 50%;
+    .aqi-temp {
+      text-align: center;
+      width: 100%;
+      #aqi {
+        margin: 0;
+        text-align: center;
+        font-size: 20vw;
+        font-weight: 800;
+        line-height: 20vw;
+      }
+      #temp {
+        margin: 0;
+        font-size: 3vw;
+      }
+    }
+  }
+
+  .place-name {
+    text-align: left;
+    #city-state {
+      margin: 0;
+      font-size: 4vw;
+    }
+    #country {
+      margin: 0;
+      font-size: 2vw;
+    }
+  }
+
 }
