@@ -76,7 +76,6 @@ async function fetchAirQuality(location = "") {
   }
   // get answer from fetching entry and return to `display`
   const answer = await returnFetch(entry);
-  console.log(answer);
 
   const data = answer.data;
   // temperature + air quality index
@@ -98,12 +97,10 @@ async function fetchLocation(query) {
   // get coords from openCage and return to `fetchAirQuality`
   const answer = await returnFetch(entry);
   const target = answer.results[0];
-  console.log(answer);
 
   // coords of the first result from forward geocoding
   const lat = target.geometry.lat;
   const lng = target.geometry.lng;
-
   // pass to `fetchAirQuality`
   fetchAirQuality({ lat, lng });
 }
