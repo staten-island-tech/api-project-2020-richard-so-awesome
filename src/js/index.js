@@ -23,7 +23,7 @@ async function returnFetch(entry) {
   }
 }
 
-async function display(temp, aqi, place) {
+async function changeBG(place) {
   // function for displaying the results
   let entry = `https://pixabay.com/api/?q=${place.state}&orientation=horizontal&min_width=1920&min_height=1080&editors_choice=1&category=places&key=${keys.pixabay}`;
   // fetch custom background
@@ -33,21 +33,29 @@ async function display(temp, aqi, place) {
     entry = `https://pixabay.com/api/?id=3625405&key=${keys.pixabay}`;
     answer = await returnFetch(entry);
   }
-  const BG = answer.hits[0].largeImageURL;
+
+  // get url from fetched data
+  const BG_url = answer.hits[0].largeImageURL;
 
   // change background
-  DOMSelectors.bg.style.backgroundImage = `url('${BG}')`;
+  DOMSelectors.bg.style.backgroundImage = `url('${BG_url}')`;
+}
 
-  // change place placeholder
+function changePlaceHTML(place) {
+  // create place placeholder
   let cityState;
   if (place.city === place.state) {
     cityState = `${place.city}`;
   } else {
     cityState = `${place.city}, ${place.state}`;
   }
+
+  // change html respectively within DOM
   DOMSelectors.placeCityState.innerHTML = cityState;
   DOMSelectors.placeCountry.innerHTML = place.country;
+}
 
+function changeNumHTML(temp, aqi) {
   // change aqi color
   let color;
   if (aqi <= 50) {
@@ -60,9 +68,21 @@ async function display(temp, aqi, place) {
     color = "purple";
   }
   DOMSelectors.aqi.style.color = color;
+
   // change aqi + temp
   DOMSelectors.aqi.innerHTML = aqi;
   DOMSelectors.temp.innerHTML = `${temp}°C / ${celciusToF(temp)}°F`;
+}
+
+function display(temp, aqi, place) {
+  // generate new background based on place information
+  changeBG(place);
+
+  // change place placeholder using function
+  changePlaceHTML(place);
+
+  // change temperature and aqi on html
+  changeNumHTML(temp, aqi);
 }
 
 async function fetchAirQuality(location = "") {
@@ -76,8 +96,8 @@ async function fetchAirQuality(location = "") {
   }
   // get answer from fetching entry and return to `display`
   const answer = await returnFetch(entry);
-
   const data = answer.data;
+
   // temperature + air quality index
   const temp = data.current.weather.tp;
   const aqi = data.current.pollution.aqius;
@@ -86,6 +106,7 @@ async function fetchAirQuality(location = "") {
   const state = data.state;
   const city = data.city;
   const country = data.country;
+
   // display the result
   display(temp, aqi, { city, state, country });
 }
@@ -108,7 +129,8 @@ async function fetchLocation(query) {
 function init() {
   fetchAirQuality();
 
-  DOMSelectors.userBtn.addEventListener('click', (e) => {
+  // create event listener when searched
+  DOMSelectors.userBtn.addEventListener("click", (e) => {
     e.preventDefault();
     const query = DOMSelectors.userSearch.value;
     DOMSelectors.userSearch.value = "";
